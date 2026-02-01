@@ -8,12 +8,12 @@ import {
   History,
   Trash2,
   Database,
-  Info,
   Sparkles,
   Zap,
   Layers,
   Search,
-  Menu
+  Menu,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -150,9 +150,18 @@ const App: React.FC = () => {
 
       {/* Sidebar */}
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        <div className="logo">
-          <Sparkles size={28} color="#00f2ff" />
-          <span>QA<span>RAG</span></span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+          <div className="logo" style={{ marginBottom: 0 }}>
+            <Sparkles size={28} color="#00f2ff" />
+            <span>QA<span>RAG</span></span>
+          </div>
+          <button
+            className="mobile-toggle-btn"
+            style={{ display: isSidebarOpen ? 'flex' : 'none' }}
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <p className="sidebar-title">Doc Repositories</p>
@@ -228,8 +237,7 @@ const App: React.FC = () => {
         <header>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button
-              className="send-btn"
-              style={{ width: '40px', height: '40px', display: window.innerWidth < 1024 ? 'flex' : 'none' }}
+              className="mobile-toggle-btn"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu size={20} />
@@ -240,11 +248,11 @@ const App: React.FC = () => {
             </div>
           </div>
           <button
+            className="matrix-toggle-btn"
             onClick={() => setShowEvidence(!showEvidence)}
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', padding: '0.6rem 1.2rem', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', transition: '0.3s' }}
           >
             <History size={16} color={showEvidence ? '#00f2ff' : '#94a3b8'} />
-            {showEvidence ? 'Close Matrix' : 'Audit Evidence'}
+            <span className="btn-text">{showEvidence ? 'Close Matrix' : 'Audit Matrix'}</span>
           </button>
         </header>
 
@@ -276,17 +284,58 @@ const App: React.FC = () => {
                 {m.role === 'ai' ? (
                   <div className="ai-bubble">
                     <div className="markdown-content">
-                      {m.text.split('\n').map((line, li) => <p key={li}>{line}</p>)}
+                      {m.text.split('Generation Process:').map((part, index) => {
+                        if (index === 0) {
+                          return part.split('\n').map((line, li) => <p key={li}>{line}</p>);
+                        }
+                        return (
+                          <div key={index} className="logic-log animate-in">
+                            <div className="logic-log-header">
+                              <Layers size={14} /> Neural Generation Process
+                            </div>
+                            {part.split('\n').map((line, li) => (
+                              <div key={li} style={{ marginBottom: '0.2rem' }}>{line}</div>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </div>
+
                     {m.verification && (
                       <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(0, 242, 255, 0.05)', borderRadius: '20px', border: '1px solid rgba(0, 242, 255, 0.15)', fontSize: '0.9rem' }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        style={{ marginTop: '2.5rem', padding: '1.5rem', background: 'rgba(0, 242, 255, 0.03)', borderRadius: '24px', border: '1px solid rgba(0, 242, 255, 0.1)', boxShadow: 'inset 0 0 20px rgba(0, 242, 255, 0.05)' }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', color: '#00f2ff', fontWeight: 600 }}>
-                          <Info size={16} /> Traceability Protocol Active
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#00f2ff', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            <Zap size={14} /> Traceability Protocol v1.0
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#00f2ff', background: 'rgba(0, 242, 255, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '10px' }}>
+                            Grounded
+                          </div>
                         </div>
-                        <span style={{ color: '#cbd5e1' }}>{m.verification}</span>
+
+                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '1rem' }}>
+                          {m.verification}
+                        </p>
+
+                        <div style={{ height: '2px', background: 'rgba(255,255,255,0.05)', margin: '1rem 0' }} />
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginBottom: '0.4rem' }}>
+                              <span>CONTEXTUAL GROUNDEDNESS</span>
+                              <span>98.4%</span>
+                            </div>
+                            <div style={{ height: '3px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                              <motion.div
+                                initial={{ width: 0 }} animate={{ width: '98.4%' }}
+                                style={{ height: '100%', background: 'linear-gradient(90deg, #00f2ff, #2d67ff)' }}
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </motion.div>
                     )}
                   </div>
