@@ -1,4 +1,4 @@
-# 🚀 AeroDoc AI | Premium Multilingual RAG Engine
+# 🚀 QARAG | Premium Multilingual RAG Engine
 
 A professional Document Intelligence & QA system designed for educational textbooks (Marathi & English). Built with a "local-embeddings, cloud-synthesis" architecture to provide high-speed, grounded, and explainable insights.
 
