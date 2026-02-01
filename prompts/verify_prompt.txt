@@ -1,0 +1,13 @@
+Given:
+1. User question
+2. Answer generated
+3. Retrieved context
+
+Verify:
+- Is the answer fully backed by the context?
+- List supported vs unsupported claims
+- Do NOT invent new facts
+
+Return:
+- Verification status (SUPPORTED/PARTIAL/UNSUPPORTED)
+- Explanation

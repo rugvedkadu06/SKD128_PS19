@@ -1,0 +1,9 @@
+groq
+streamlit
+sentence-transformers
+numpy
+scipy
+nltk
+pdfplumber
+PyPDF2
+python-dotenv
