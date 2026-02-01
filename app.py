@@ -11,7 +11,7 @@ from core.verifier import verify_answer
 from core.prompts import ANSWER_PROMPT
 
 # Set page config for a premium look
-st.set_page_config(page_title="AeroDoc AI | Groq Edition", layout="wide")
+st.set_page_config(page_title="AeroDoc AI | Premium RAG", layout="wide")
 
 # Custom CSS for glassmorphic design
 st.markdown("""
@@ -23,6 +23,17 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background-color: #050506;
         border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .stHeader {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+    }
+    .metric-card {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -40,7 +51,7 @@ if not api_key or "PASTE" in api_key:
 
 client = Groq(api_key=api_key)
 
-st.title("🚀 Multi-lingual RAG PDF QA with Groq")
+st.title("🚀 AeroDoc AI: Multilingual RAG Intelligence")
 st.markdown("---")
 
 with st.sidebar:
@@ -67,7 +78,7 @@ if uploaded:
     for d in docs_data:
         sentences = nltk.sent_tokenize(d["text"])
         for sent in sentences:
-            if len(sent.strip()) > 20:
+            if len(sent.strip()) > 30: # Filter noise
                 chunks.append({
                     "text": sent,
                     "doc": d["filename"],
@@ -87,57 +98,64 @@ if uploaded:
         st.stop()
 
     # Question Input
-    query = st.text_input("Ask a question (English, Marathi, Hindi, etc.)")
+    query = st.text_input("Ask a question (English or Marathi)")
 
     if query:
-        with st.spinner("⚡ Groq Intelligence Engine Processing..."):
+        with st.spinner("⚡ Processing RAG Pipeline..."):
             try:
                 # 4) Query embedding (local)
                 q_emb = embed_texts([query])[0]
 
                 # 5) Retrieval
                 search_pool = [{"emb": e, **chunks[i]} for i, e in enumerate(chunk_embs)]
-                results = retrieve_chunks(q_emb, search_pool, top_k=5)
+                results = retrieve_chunks(q_emb, search_pool, top_k=7) 
 
                 context = "\n\n".join([f"Source: {r['doc']}, Page: {r['page']}\nContent: {r['text']}" for r in results])
 
                 # 6) Generate answer with Groq (Using Llama 3)
-                prompt = f"{ANSWER_PROMPT}\n\nContext:\n{context}\n\nQuestion: {query}"
+                prompt = (
+                    f"{ANSWER_PROMPT}\n\n"
+                    f"USER QUERY: {query}\n\n"
+                    f"RETRIVED CONTEXT CHUNKS:\n{context}\n\n"
+                    f"Strictly follow the requested OUTPUT FORMAT."
+                )
                 
                 completion = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.2,
-                    max_tokens=1024
+                    temperature=0.1, 
+                    max_tokens=1500
                 )
                 answer_raw = completion.choices[0].message.content
                 
-                # 7) Self-verification
-                verification = verify_answer(query, answer_raw, context)
-
-                # 8) Confidence Score
-                conf_score = np.mean([cosine_sim(q_emb, r["emb"]) for r in results]) * 100
-
                 # Display Results
-                col1, col2 = st.columns([2, 1])
-
-                with col1:
-                    st.subheader("💡 Expert Answer")
-                    st.markdown(answer_raw)
+                st.markdown(answer_raw)
+                
+                # --- NEW: Enhanced Evidence Multi-Parameter Display ---
+                st.markdown("---")
+                st.subheader("📊 Semantic Evidence Matrix")
+                st.write("Multiple supporting contexts retrieved based on vector similarity:")
+                
+                for idx, r in enumerate(results):
+                    score = float(cosine_sim(q_emb, r["emb"]))
+                    match_percent = score * 100
                     
-                    st.subheader("📊 Reliability Metrics")
-                    st.write(f"**Confidence Score:** `{conf_score:.2f}%`")
-                    st.write(f"**Verification Status:**")
-                    st.info(verification)
+                    # Color coding based on match quality
+                    status_color = "🟢 High Match" if match_percent > 85 else "🟡 Medium Match" if match_percent > 70 else "⚪ Low Match"
+                    
+                    with st.expander(f"📌 Rank #{idx+1} | {status_color} ({match_percent:.1f}%) | Page {r['page']}"):
+                        st.markdown(f"**Source File:** `{r['doc']}`")
+                        st.markdown(f"**Retrieved Context:**")
+                        st.info(r['text'])
+                        st.markdown(f"*Similarity metric: {score:.4f}*")
+                        st.progress(score)
 
-                with col2:
-                    st.subheader("📑 Evidence Highlights")
-                    for r in results:
-                        with st.expander(f"Snippet from {r['doc']} (Page {r['page']})"):
-                            st.write(r['text'])
-                            st.progress(float(cosine_sim(q_emb, r["emb"])))
+                # 7) Self-verification (Internal check)
+                with st.expander("🔍 AI Self-Verification Deep-Dive"):
+                    verification = verify_answer(query, answer_raw, context)
+                    st.write(verification)
 
             except Exception as e:
                 st.error(f"Error communicating with Groq: {str(e)}")
@@ -145,4 +163,4 @@ else:
     st.warning("Please upload at least one PDF to get started.")
 
 st.markdown("---")
-st.caption("AeroDoc AI Python | Groq Llama-3 Edition")
+st.caption("AeroDoc AI Premium | Multilingual RAG Engine v3.0")
